@@ -2,9 +2,7 @@ import axios from "axios";
 
 const api = axios.create({baseURL: "https://api.spotify.com/v1"});
 
-api.defaults.headers.common[
-  "Authorization"
-] = `Bearer BQDAsn9htWqSPHm_ttewUZZGYWb70EfiwcBN1vP5hUgpEnB0cZSSyjUAgnty-KklrxbAsUEED17Ghk_vg2Im7RRFTIUY4n-loHNfuVOEbWs4Kswg7cc4c5rO1etBWxbXtkeLtViAlKjf-shsuiPLwcTu8Y5jxFOpcy_mB1sXULNt82-J7T4UOlonBomVkCJmf1-CEnUiP8rgdKBztafYweHxJEkKewbv96NGs1bYok81lrDn5QRggfibTvbQ68xlG7W74buBxvg`;
+api.defaults.headers.common["Authorization"] = `Bearer ${process.env.SPOTIFY_TOKEN}`;
 
 export default {
   recommendations: {
