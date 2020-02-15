@@ -1,4 +1,5 @@
 export default {
+  status: "init",
   song: null,
   candidates: [],
   get winner() {

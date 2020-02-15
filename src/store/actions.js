@@ -3,41 +3,33 @@ import ws from "../websocket";
 import state from "./state";
 import api from "./resources";
 
-async function getCurrent() {
-  const player = await api.player.fetch();
-
-  if (!player.is_playing) {
-    return Promise.reject("Music is not playing");
-  }
-
-  return {...player.item, remaining_ms: player.item.duration_ms - player.progress_ms};
-}
-
-function getRecommendations(track) {
-  return api.recommendations
-    .fetch(track)
-    .then((recommendations) => recommendations.map((recommendation) => ({...recommendation, votes: 0})));
-}
-
-function playNext() {
-  return api.player.play(state.winner.uri);
-}
-
 async function loop() {
   try {
-    const current = await getCurrent();
+    const current = await api.player.fetch();
 
-    if (!state.song || state.song.name !== current.name) {
-      state.candidates = await getRecommendations(current.id);
+    if (!state.song || state.song.id !== current.id) {
+      state.candidates = await api.recommendations.fetch(current.id);
       state.song = current;
+      state.status = "playing";
 
       ws.emit("song", state.song);
       ws.emit("candidates", state.candidates);
+      ws.emit("status", state.status);
 
-      setTimeout(playNext, state.song.remaining_ms);
+      setTimeout(() => {
+        state.status = "finished";
+
+        ws.emit("status", state.status);
+      }, state.song.remaining_ms - 5000);
+
+      setTimeout(() => api.player.play(state.winner.uri), state.song.remaining_ms);
       setTimeout(loop, state.song.remaining_ms + 5000);
     }
   } catch (e) {
+    console.warn("ERROR: ", e);
+
+    state.status = "init";
+
     return setTimeout(loop, 10000);
   }
 }
@@ -63,5 +55,6 @@ export function initialize() {
   ws.on("connection", (socket) => {
     socket.emit("song", state.song);
     socket.emit("candidates", state.candidates);
+    socket.emit("status", state.status);
   });
 }

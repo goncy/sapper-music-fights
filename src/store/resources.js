@@ -13,19 +13,27 @@ export default {
             market: "AR",
             seed_genres: genres ? encodeURIComponent(genres) : null,
             seed_tracks: tracks,
-            limit: 4,
+            limit: 10,
           },
         })
         .then((res) =>
-          res.status === 200 ? res.data.tracks : Promise.reject("Failed trying to retrieve recomendations"),
+          res.status === 200
+            ? res.data.tracks.map((recommendation) => ({...recommendation, votes: 0}))
+            : Promise.reject("Failed trying to retrieve recomendations"),
         ),
   },
   player: {
     fetch: () =>
-      api.get("/me/player").then((res) => (res.status === 200 ? res.data : Promise.reject("Music is not playing"))),
+      api
+        .get("/me/player")
+        .then((res) =>
+          res.status === 200 && res.data.is_playing
+            ? {...res.data.item, remaining_ms: res.data.item.duration_ms - res.data.progress_ms}
+            : Promise.reject("Music is not playing"),
+        ),
     play: (id) =>
       api
         .put("/me/player/play", {uris: [id]})
-        .then((res) => (res.status === 200 ? res.data : Promise.reject("Failed trying to play the specified song"))),
+        .then((res) => (res.status === 204 ? res.data : Promise.reject("Failed trying to play the specified song"))),
   },
 };
