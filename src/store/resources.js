@@ -5,7 +5,7 @@ import state from "./state";
 
 const api = axios.create({baseURL: "https://api.spotify.com/v1"});
 
-// api.defaults.headers.common["Authorization"] = `Bearer ${state.token}`;
+// api.defaults.headers.common["Authorization"] = `Bearer ${state.token.access}`;
 
 export default {
   authorization: {
@@ -34,7 +34,7 @@ export default {
             limit: 30,
           },
           headers: {
-            Authorization: `Bearer ${state.token}`,
+            Authorization: `Bearer ${state.token.access}`,
           },
         })
         .then((res) =>
@@ -48,7 +48,7 @@ export default {
       api
         .get("/me/player", {
           headers: {
-            Authorization: `Bearer ${state.token}`,
+            Authorization: `Bearer ${state.token.access}`,
           },
         })
         .then((res) =>
@@ -65,7 +65,7 @@ export default {
           },
           {
             headers: {
-              Authorization: `Bearer ${state.token}`,
+              Authorization: `Bearer ${state.token.access}`,
             },
           },
         )

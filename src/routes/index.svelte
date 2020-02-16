@@ -1,16 +1,19 @@
 <script>
-  import io from "socket.io-client";
   import axios from "axios";
+  import {onMount} from "svelte";
+  import io from "socket.io-client";
 
   const socket = io("ws://localhost:3000", {transports: ["websocket"]});
 
+  let status = "pending";
   let song = null;
   let candidates = [];
-  let status = "init";
 
-  socket.on("song", (_song) => (song = _song));
-  socket.on("candidates", (_candidates) => (candidates = _candidates));
-  socket.on("status", (_status) => (status = _status));
+  onMount(() => {
+    socket.on("status", (_status) => (status = _status));
+    socket.on("song", (_song) => (song = _song));
+    socket.on("candidates", (_candidates) => (candidates = _candidates));
+  });
 
   function vote(id) {
     return axios.post(`api/vote/${id}`);
@@ -18,12 +21,14 @@
 </script>
 
 <svelte:head>
-  <title>Let them fight!</title>
+  <title>A pelear!</title>
 </svelte:head>
 
 <main>
-  {#if status === 'init'}
-    <span>Music is not playing</span>
+  {#if status === 'pending'}
+    <span>Cargando...</span>
+  {:else if status === 'ready'}
+    <span>La musica no esta sonando</span>
   {:else}
     <h3>Currently playing: {song.artists[0].name} - {song.name}</h3>
     {#if candidates}

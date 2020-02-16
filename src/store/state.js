@@ -1,7 +1,6 @@
 export default {
   // Tokens
-  token: null,
-  refresh: null,
+  token: {},
   // Initialize status
   status: "init",
   // Current song

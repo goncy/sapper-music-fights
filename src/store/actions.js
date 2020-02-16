@@ -16,32 +16,16 @@ async function loop() {
       ws.emit("candidates", state.candidates);
       ws.emit("status", state.status);
 
-      setTimeout(() => {
-        state.status = "finished";
-
-        ws.emit("status", state.status);
-      }, state.song.remaining_ms - 5000);
-
       setTimeout(() => api.player.play(state.winner.uri), state.song.remaining_ms);
       setTimeout(loop, state.song.remaining_ms + 5000);
     }
   } catch (e) {
     console.warn("ERROR: ", e);
 
-    state.status = "init";
+    state.status = "ready";
 
     return setTimeout(loop, 10000);
   }
-}
-
-function initialize() {
-  loop();
-
-  ws.on("connection", (socket) => {
-    socket.emit("song", state.song);
-    socket.emit("candidates", state.candidates);
-    socket.emit("status", state.status);
-  });
 }
 
 // Exported methods
@@ -60,12 +44,23 @@ export function vote(id) {
 }
 
 export function authorize(code) {
-  return api.authorization.exchange(code).then((response) => {
-    state.token = response.access_token;
-    state.refresh = response.refresh_token;
+  if (state.token.access) return Promise.reject("A user is already authorized");
 
-    initialize();
+  return api.authorization
+    .exchange(code)
+    .then((response) => {
+      state.token.access = response.access_token;
+      state.token.refresh = response.refresh_token;
+      state.status = "ready";
 
-    return token;
-  });
+      loop();
+    })
+    .catch((e) => {
+      console.log(e);
+
+      state.status = "error";
+    })
+    .finally(() => {
+      ws.emit("status", state.status);
+    });
 }
