@@ -34,6 +34,16 @@ async function loop() {
   }
 }
 
+function initialize() {
+  loop();
+
+  ws.on("connection", (socket) => {
+    socket.emit("song", state.song);
+    socket.emit("candidates", state.candidates);
+    socket.emit("status", state.status);
+  });
+}
+
 // Exported methods
 export function vote(id) {
   const index = state.candidates.findIndex((candidate) => candidate.id === id);
@@ -49,12 +59,13 @@ export function vote(id) {
   return state.candidates[index].votes;
 }
 
-export function initialize() {
-  loop();
+export function authorize(code) {
+  return api.authorization.exchange(code).then((response) => {
+    state.token = response.access_token;
+    state.refresh = response.refresh_token;
 
-  ws.on("connection", (socket) => {
-    socket.emit("song", state.song);
-    socket.emit("candidates", state.candidates);
-    socket.emit("status", state.status);
+    initialize();
+
+    return token;
   });
 }
