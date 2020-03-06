@@ -1,4 +1,4 @@
-import {authorize} from "../../store/actions";
+import {authorize} from "../../stores/api/actions";
 
 export function post(req, res) {
   authorize(req.query.code)

@@ -1,4 +1,4 @@
-import ws from "../websocket";
+import ws from "../../websocket";
 
 import state from "./state";
 import api from "./resources";
@@ -7,25 +7,40 @@ async function loop() {
   try {
     const current = await api.player.fetch();
 
-    if (!state.song || state.song.id !== current.id) {
-      state.candidates = await api.recommendations.fetch(current.id);
-      state.song = current;
+    if (current.remaining_ms <= 10000 && state.status !== "imminent") {
+      state.status = "imminent";
+
+      ws.emit("status", state.status);
+
+      setTimeout(() => {
+        if (state.winner) {
+          api.player.play(state.winner.uri);
+        }
+      }, current.remaining_ms - 1000);
+    } else if (!state.song || state.song.id !== current.id) {
+      state.songs.push(current);
+      state.candidates = await api.recommendations.fetch(state.seeds);
       state.status = "playing";
 
       ws.emit("song", state.song);
       ws.emit("candidates", state.candidates);
       ws.emit("status", state.status);
-
-      setTimeout(() => api.player.play(state.winner.uri), state.song.remaining_ms);
-      setTimeout(loop, state.song.remaining_ms + 5000);
+    } else if (!current.is_playing) {
+      if (state.winner) {
+        api.player.play(state.winner.uri);
+      } else {
+        api.player.play(current.uri);
+      }
     }
   } catch (e) {
     console.warn("ERROR: ", e);
 
     state.status = "ready";
 
-    return setTimeout(loop, 10000);
+    ws.emit("status", state.status);
   }
+
+  setTimeout(loop, 5000);
 }
 
 // Exported methods
@@ -51,7 +66,7 @@ export function authorize(code) {
     .then((response) => {
       state.token.access = response.access_token;
       state.token.refresh = response.refresh_token;
-      state.status = "ready";
+      state.status = "sync";
 
       loop();
     })

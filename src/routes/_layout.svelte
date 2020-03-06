@@ -1,20 +1,17 @@
 <script>
   import axios from "axios";
-  import io from "socket.io-client";
   import {onMount} from "svelte";
+  import {goto} from "@sapper/app";
 
-  const socket = io("ws://localhost:3000", {transports: ["websocket"]});
+  import {status} from "../stores/client/store";
 
-  let status = "pending";
   let code;
-
-  socket.on("status", (_status) => (status = _status));
 
   onMount(() => {
     code = new URLSearchParams(window.location.search).get("code");
 
     if (code) {
-      axios.post(`api/authorize?code=${code}`);
+      axios.post(`api/authorize?code=${code}`).then(() => goto("/"));
     }
   });
 </script>
@@ -26,17 +23,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 100%;
     width: 100vw;
-    height: 100vh;
+    min-height: 100vh;
   }
 </style>
 
 <main>
-  {#if status === 'pending'}
+  {#if $status === 'disconnected'}
+    <span>Desconectado</span>
+  {:else if $status === 'pending'}
     <span>Cargando...</span>
-  {:else if status === 'error'}
+  {:else if $status === 'error'}
     <span>Hubo un error, intenta de nuevo mas tarde</span>
-  {:else if status === 'init'}
+  {:else if $status === 'init'}
     {#if code}
       <span>Autorizando...</span>
     {:else}

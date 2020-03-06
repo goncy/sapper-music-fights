@@ -5,8 +5,6 @@ import state from "./state";
 
 const api = axios.create({baseURL: "https://api.spotify.com/v1"});
 
-// api.defaults.headers.common["Authorization"] = `Bearer ${state.token.access}`;
-
 export default {
   authorization: {
     exchange: (code) =>
@@ -24,14 +22,13 @@ export default {
       }).then((res) => (res.status === 200 ? res.data : Promise.reject("Failed exchanging the token"))),
   },
   recommendations: {
-    fetch: (tracks, genres) =>
+    fetch: (tracks) =>
       api
         .get("/recommendations", {
           params: {
             market: "AR",
-            seed_genres: genres ? encodeURIComponent(genres) : null,
             seed_tracks: tracks,
-            limit: 30,
+            limit: 10,
           },
           headers: {
             Authorization: `Bearer ${state.token.access}`,
@@ -52,8 +49,12 @@ export default {
           },
         })
         .then((res) =>
-          res.status === 200 && res.data.is_playing
-            ? {...res.data.item, remaining_ms: res.data.item.duration_ms - res.data.progress_ms}
+          res.status === 200
+            ? {
+                ...res.data.item,
+                is_playing: res.data.is_playing,
+                remaining_ms: res.data.item.duration_ms - res.data.progress_ms,
+              }
             : Promise.reject("Music is not playing"),
         ),
     play: (id) =>

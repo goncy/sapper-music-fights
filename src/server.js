@@ -5,7 +5,7 @@ import * as sapper from "@sapper/server";
 
 import server from "./http";
 import ws from "./websocket";
-import state from "./store/state";
+import state from "./stores/api/state";
 
 polka({server})
   .use(compression({threshold: 0}), sirv("static", {dev: process.env.NODE_ENV === "development"}), sapper.middleware())
