@@ -14,7 +14,7 @@ export default {
         data: querystring.stringify({
           code,
           grant_type: "authorization_code",
-          redirect_uri: "http://localhost:3000",
+          redirect_uri: process.env.URL,
           client_id: "cd164d11dbbc448fa9252811ea156a0c",
           client_secret: "d2dfa5b921cf43948cce76fcad66e9cd",
         }),

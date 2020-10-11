@@ -1,7 +1,7 @@
 import {writable} from "svelte/store";
 import io from "socket.io-client";
 
-const socket = io("/", {transports: ["websocket"]});
+const socket = io(process.env.URL || "/", {transports: ["websocket"]});
 
 export const song = writable(null);
 export const status = writable("pending");
