@@ -1,7 +1,7 @@
 import {writable} from "svelte/store";
 import io from "socket.io-client";
 
-const socket = io(process.env.URL || "/", {transports: ["websocket"]});
+const socket = io("https://sapper-music-fights.vercel.app/", {transports: ["websocket"]});
 
 export const song = writable(null);
 export const status = writable("pending");
